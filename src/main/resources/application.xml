@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:mvc="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd
+http://www.springframework.org/schema/aop
+http://www.springframework.org/schema/aop/spring-aop.xsd
+http://www.springframework.org/schema/tx
+http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+    <!-- 数据源配置1 -->
+    <context:component-scan base-package="com.wangchun.*" />
+    <bean id="OracleDataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"></property>
+        <property name="url" value="jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL = TCP)(HOST =10.221.155.90)(PORT = 1521))(LOAD_BALANCE=no)(CONNECT_DATA=(SERVICE_NAME=ORA60T)(FAILOVER_MODE=(TYPE=SELECT)(METHOD=BASIC)(RETRIES=180)(DELAY=5))))"></property>
+        <property name="username" value="carrier"></property>
+        <property name="password" value="carrier169"></property>
+    </bean>
+    <bean id="MySqlDataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+        <property name="url" value="jdbc:mysql://localhost:3306/test"></property>
+        <property name="username" value="root"></property>
+        <property name="password" value="root"></property>
+    </bean>
+    <!--在此处能够对两个数据源进行切换-->
+    <bean id="dynamicDataSource" class="com.wangchun.util.DynamicDataSource">
+         <property name="targetDataSources">
+             <map>
+                 <entry key="dataSource1" value-ref="OracleDataSource"></entry>
+                 <entry key="dataSource2" value-ref="MySqlDataSource"></entry>
+             </map>
+         </property>
+        <property name="defaultTargetDataSource" ref="MySqlDataSource"></property>
+    </bean>
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dynamicDataSource"></property>
+    </bean>
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dynamicDataSource"></property>
+        <!--如果mapper的xml文件和接口文件不在一个目录下,那么就需要配置这个标签-->
+        <!--<property name="mapperLocations" value="classpath*:com/wangchun/mapper/*.xml"></property>-->
+    </bean>
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.wangchun.mapper"></property>
+    </bean>
+
+    <bean id="dataSourceAspect" class="com.wangchun.aspect.DataSourceAspect">
+    </bean>
+    <aop:config>
+        <aop:aspect ref="dataSourceAspect">
+            <aop:pointcut id="dataSourcePointcut" expression="execution(* com.wangchun.controller.*.*(..))"/>
+            <aop:before method="intercept" pointcut-ref="dataSourcePointcut"></aop:before>
+        </aop:aspect>
+    </aop:config>
+</beans>

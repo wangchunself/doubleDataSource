@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wangchun.mapper.UserMapper">
+    <select id="getUsers" resultType="com.wangchun.bean.User">
+        SELECT * from t_user
+    </select>
+    <select id="getUserOracle" resultType="com.wangchun.bean.UserOracle">
+        SELECT * from acm_user
+    </select>
+</mapper>
